@@ -1,0 +1,33 @@
+from setuptools import setup, find_packages
+
+setup(
+    name="error-management",
+    version="0.1.0",
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
+    install_requires=[
+        "watchdog>=2.1.0",
+        "cryptography>=3.4.7",
+        "aiofiles>=0.8.0",
+        "typing-extensions>=4.0.0",
+        "grpcio>=1.44.0",
+        "grpcio-tools>=1.44.0",
+        "protobuf>=3.19.0",
+        "anthropic>=0.3.0",
+        "pyOpenSSL>=22.0.0",
+        "certifi>=2021.10.8",
+        "urllib3>=1.26.7",
+        "prometheus-client>=0.14.1",
+        "psutil>=5.9.0",
+        "pytest>=7.0.0",
+        "pytest-asyncio>=0.18.0",
+        "pytest-cov>=3.0.0",
+        "black>=22.3.0",
+        "flake8>=4.0.1",
+        "mypy>=0.950",
+        "kubernetes>=24.2.0",
+        "aiohttp>=3.8.0",
+        "docker>=6.0.0",
+    ],
+    python_requires=">=3.8",
+)

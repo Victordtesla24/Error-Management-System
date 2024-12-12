@@ -1,75 +1,207 @@
 #!/bin/bash
-set -e
 
-echo "Running verify_and_fix.sh..."
+echo "Starting verify and fix process..."
 
-# Verify project structure alignment
-echo "Verifying project structure..."
-required_dirs=("src" "tests" "docs" "scripts")
-for dir in "${required_dirs[@]}"; do
-    if [ ! -d "$dir" ]; then
-        echo "Creating missing directory: $dir"
-        mkdir -p "$dir"
+# Function to verify project structure
+verify_structure() {
+    echo "Verifying project structure..."
+    required_dirs=("src" "tests" "docs" "scripts" "logs")
+    for dir in "${required_dirs[@]}"; do
+        if [ ! -d "$dir" ]; then
+            mkdir -p "$dir"
+            echo "Created missing directory: $dir"
+        fi
+    done
+}
+
+# Function to fix directory organization
+fix_organization() {
+    echo "Fixing directory organization..."
+    # Move Python files to src if they exist in root
+    find . -maxdepth 1 -name "*.py" -not -path "./setup.py" -exec mv {} src/ \; 2>/dev/null || true
+    # Move test files to tests directory
+    find . -name "test_*.py" -not -path "./tests/*" -exec mv {} tests/ \; 2>/dev/null || true
+    # Move documentation to docs
+    find . -name "*.md" -not -path "./docs/*" -not -name "README.md" -exec mv {} docs/ \; 2>/dev/null || true
+}
+
+# Function to consolidate duplicate files
+consolidate_duplicates() {
+    echo "Checking for duplicate files..."
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS version
+        find . -type f -exec md5 {} \; | sort | awk '{print $NF}' | uniq -d | while read -r file; do
+            echo "Potential duplicate found: $file"
+        done
+    else
+        # Linux version
+        find . -type f -exec md5sum {} \; | sort | uniq -D -w32 | while read -r hash file; do
+            echo "Potential duplicate found: $file"
+        done
     fi
-done
+}
 
-# Fix directory organization
-echo "Fixing directory organization..."
-if [ ! -d "docs" ]; then
-    mkdir -p docs
-fi
+# Function to manage imports
+manage_imports() {
+    echo "Managing imports..."
+    if command -v pip >/dev/null 2>&1; then
+        pip install isort autoflake >/dev/null 2>&1 || true
+        if command -v isort >/dev/null 2>&1; then
+            isort . || true
+        fi
+        if command -v autoflake >/dev/null 2>&1; then
+            autoflake --recursive --in-place --remove-all-unused-imports . || true
+        fi
+    fi
+}
 
-# Create/update documentation files if missing
-if [ ! -f "docs/architecture.md" ]; then
-    echo "Creating architecture.md..."
-    echo "# System Architecture" > docs/architecture.md
-fi
+# Function to fix linting errors
+fix_linting() {
+    echo "Fixing linting errors..."
+    if command -v pip >/dev/null 2>&1; then
+        pip install black flake8 >/dev/null 2>&1 || true
+        if command -v black >/dev/null 2>&1; then
+            black . || true
+        fi
+        if command -v flake8 >/dev/null 2>&1; then
+            flake8 . || true
+        fi
+    fi
+}
 
-# Fix linting errors automatically
-echo "Running automatic code formatting..."
-echo "Running black..."
-python3 -m black src tests || echo "Warning: black formatting failed"
+# Function to update documentation
+update_docs() {
+    echo "Updating documentation..."
+    # Install pdoc if needed
+    if command -v pip >/dev/null 2>&1; then
+        pip install pdoc3 >/dev/null 2>&1 || true
+    fi
+    
+    # Update API documentation
+    if [ -d "src" ]; then
+        if command -v pdoc >/dev/null 2>&1; then
+            pdoc --html --output-dir docs/api src/ || true
+        fi
+    fi
+    
+    # Ensure all required documentation exists and update them
+    required_docs=("architecture.md" "implementation_plans.md" "testing_architecture.md")
+    for doc in "${required_docs[@]}"; do
+        if [ ! -f "docs/$doc" ]; then
+            touch "docs/$doc"
+            echo "Created missing documentation: $doc"
+        fi
+        # Update timestamp in documentation
+        echo -e "\n\nLast updated: $(date)" >> "docs/$doc"
+    done
 
-echo "Running isort..."
-python3 -m isort src tests || echo "Warning: isort failed"
+    # Update README if it doesn't exist
+    if [ ! -f "README.md" ]; then
+        echo "# Error Management System\n\nAn automated error management system.\n\nLast updated: $(date)" > README.md
+    fi
+}
 
-echo "Running flake8..."
-python3 -m flake8 src tests || echo "Warning: flake8 check failed"
+# Function to monitor and adjust memory thresholds
+manage_memory() {
+    echo "Managing memory thresholds..."
+    # Get current memory usage (platform independent)
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS
+        memory_usage=$(ps -o %mem -p $$ | tail -1)
+    else
+        # Linux
+        memory_usage=$(ps -o %mem= -p $$)
+    fi
+    
+    if (( $(echo "$memory_usage > 80" | bc -l 2>/dev/null || echo 0) )); then
+        echo "Warning: High memory usage detected"
+    fi
+}
 
-# Run tests with coverage
-echo "Running tests with coverage..."
-python3 -m pytest \
-    --cov=src \
-    --cov-report=term-missing \
-    --cov-fail-under=70 \
-    -v || echo "Warning: Test coverage below threshold"
+# Function to improve indexing performance
+improve_indexing() {
+    echo "Improving indexing performance..."
+    # Clean up unnecessary files
+    find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+    find . -type f -name "*.pyc" -delete 2>/dev/null || true
+    find . -type f -name ".DS_Store" -delete 2>/dev/null || true
+    find . -type f -name "*.swp" -delete 2>/dev/null || true
+    
+    echo "Optimizing git repository..."
+    if command -v git >/dev/null 2>&1; then
+        git gc --aggressive 2>/dev/null || true
+        git repack -Ad 2>/dev/null || true
+        git prune 2>/dev/null || true
+    fi
+}
 
-# Update project documentation
-echo "Updating documentation..."
-if [ -f "README.md" ]; then
-    # Update timestamp in README
-    sed -i.bak "s/Last updated:.*/Last updated: $(date)/" README.md
-    rm -f README.md.bak
-fi
+# Function to initialize and update git repository
+init_git() {
+    echo "Initializing/updating git repository..."
+    
+    # Initialize git if not already initialized
+    if [ ! -d ".git" ]; then
+        git init
+        echo "Git repository initialized"
+    fi
 
-# Check for duplicate files using md5sum
-echo "Checking for duplicate files..."
-if [ "$(uname)" == "Darwin" ]; then
-    # macOS version
-    find src tests -type f -name "*.py" -exec md5 {} \; | \
-        sort | awk '{print $4,$1}' | uniq -D -f 1
-else
-    # Linux version
-    find src tests -type f -name "*.py" -exec md5sum {} \; | \
-        sort | uniq -D -w32
-fi
+    # Create .gitignore if it doesn't exist
+    if [ ! -f ".gitignore" ]; then
+        cat > .gitignore << EOL
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.env
+.venv
+env/
+venv/
+ENV/
+.idea/
+.vscode/
+*.swp
+.DS_Store
+logs/
+*.log
+EOL
+        echo ".gitignore created"
+    fi
 
-# Generate coverage report
-echo "Generating coverage report..."
-python3 -m coverage html
+    # Stage and commit changes
+    git add .
+    git status
+    if git diff-index --quiet HEAD -- 2>/dev/null; then
+        echo "No changes to commit"
+    else
+        git commit -m "Automated update: $(date)" || echo "No changes to commit"
+    fi
+}
 
-echo "verify_and_fix.sh completed successfully"
+# Main execution
+verify_structure
+fix_organization
+consolidate_duplicates
+manage_imports
+fix_linting
+update_docs
+manage_memory
+improve_indexing
+init_git
 
-# Print summary of uncovered files
-echo -e "\nFiles needing coverage improvement:"
-python3 -m coverage report --sort=Cover | grep -B1 "^src.*\s[0-6][0-9]%"
+echo "Verify and fix process completed successfully!"

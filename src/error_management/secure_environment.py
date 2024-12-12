@@ -1,208 +1,173 @@
-"""
-Secure Environment Module for Error Management System
-Handles project isolation and security context management
-"""
+"""Secure environment module."""
 
-import hashlib
 import logging
-import secrets
-from dataclasses import dataclass
+import os
+import re
 from pathlib import Path
-from typing import List
+from typing import TYPE_CHECKING, List, Optional, Set
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format=("%(asctime)s - %(name)s - %(levelname)s - %(message)s"),
-)
+if TYPE_CHECKING:
+    from src.error_management.models import Error
+
 logger = logging.getLogger(__name__)
 
 
 class SecurityError(Exception):
-    """Custom exception for security-related errors"""
+    """Security related error."""
 
     pass
 
 
-@dataclass
-class SecurityContext:
-    """Security context for project operations"""
-
-    project_path: Path
-    allowed_operations: List[str]
-    security_token: str
-
-    def to_dict(self) -> dict:
-        """Convert context to dictionary for serialization"""
-        return {
-            "project_path": str(self.project_path),
-            "allowed_operations": self.allowed_operations,
-            "security_token": self.security_token,
-        }
-
-
 class SecureEnvironment:
-    """
-    Manages the secure environment for error management operations
-    Ensures isolation and access control
-    """
+    """Manages secure file operations within project boundaries."""
 
-    def __init__(self, project_path: str):
-        """
-        Initialize secure environment with project path
+    EXCLUDED_PATTERNS = [
+        r"/node_modules/",  # Added path separators
+        r"/\.git/",
+        r"/\.pytest_cache/",
+        r"/__pycache__/",
+        r"/\.venv/",
+        r"/venv/",
+        r"/\.env/",
+        r"/site-packages/",
+        r"/\.idea/",
+        r"/\.vscode/",
+    ]
+
+    DANGEROUS_PATTERNS = [
+        r"os\.system",
+        r"subprocess\.call",
+        r"eval\(",
+        r"exec\(",
+        r"__import__",
+    ]
+
+    def __init__(self, project_root: Path):
+        """Initialize secure environment.
 
         Args:
-            project_path: Path to the project directory
-
-        Raises:
-            SecurityError: If project path is invalid or access is denied
+            project_root: Root directory of the project
         """
-        self.security_context = self._initialize_security(project_path)
-        logger.info(f"Secure environment initialized for {project_path}")
+        self.project_root = Path(project_root).resolve()
+        if not self.project_root.exists():
+            raise SecurityError(f"Project root does not exist: {self.project_root}")
+        if not self.project_root.is_dir():
+            raise SecurityError(f"Project root is not a directory: {self.project_root}")
 
-    def _initialize_security(self, project_path: str) -> SecurityContext:
-        """
-        Initialize security context for the project
+    def _is_excluded(self, path: Path) -> bool:
+        """Check if path matches excluded patterns."""
+        path_str = str(path)
+        return any(re.search(pattern, path_str) for pattern in self.EXCLUDED_PATTERNS)
+
+    def is_file_allowed(self, file_path: Path) -> bool:
+        """Check if file is allowed for operations.
 
         Args:
-            project_path: Path to the project directory
+            file_path: Path to file
 
         Returns:
-            SecurityContext: Initialized security context
-
-        Raises:
-            SecurityError: If project path validation fails
-        """
-        if not self._validate_project_path(project_path):
-            raise SecurityError(f"Invalid project path: {project_path}")
-
-        return SecurityContext(
-            project_path=Path(project_path).resolve(),
-            allowed_operations=["read", "write", "analyze"],
-            security_token=self._generate_security_token(),
-        )
-
-    def _validate_project_path(self, path: str) -> bool:
-        """
-        Validate project path for security
-
-        Args:
-            path: Path to validate
-
-        Returns:
-            bool: True if path is valid, False otherwise
+            bool: Whether file is allowed
         """
         try:
-            abs_path = Path(path).resolve()
+            file_path = Path(file_path).resolve()
 
-            # Check if path exists and is a directory
-            if not abs_path.exists():
-                abs_path.mkdir(parents=True, exist_ok=True)
-            elif not abs_path.is_dir():
-                logger.error(f"Path {path} exists but is not a directory")
-                return False
-
-            # Check if path is accessible
+            # Check if file is within project boundary
             try:
-                # Just try to list the directory without iterating
-                list(abs_path.iterdir())
-                return True
-            except PermissionError:
-                logger.error(f"Permission denied for path {path}")
+                file_path.relative_to(self.project_root)
+            except ValueError:
                 return False
-            except StopIteration:
-                # Empty directory is valid
-                return True
+
+            # Check excluded patterns
+            if self._is_excluded(file_path):
+                logger.warning(f"File matches excluded pattern: {file_path}")
+                return False
 
             return True
 
-        except (OSError, ValueError) as e:
-            logger.error(f"Error validating path {path}: {str(e)}")
+        except Exception as e:
+            logger.error(f"Error checking file allowance: {e}")
             return False
 
-    def _generate_security_token(self) -> str:
-        """
-        Generate secure token for environment operations
+    def _is_file_in_project(self, file_path: Path) -> bool:
+        """Check if file is within project boundary."""
+        return self.is_file_allowed(file_path)
 
-        Returns:
-            str: Generated security token
-        """
-        # Generate a random token
-        random_bytes = secrets.token_bytes(32)
-        # Create SHA-256 hash
-        token_hash = hashlib.sha256(random_bytes).hexdigest()
-        return token_hash
-
-    def validate_operation(self, operation: str, path: Path) -> bool:
-        """
-        Validate if an operation is allowed on a path
+    def validate_operation(self, operation: str, file_path: Path) -> bool:
+        """Validate file operation.
 
         Args:
-            operation: Operation to validate
-            path: Path to validate operation for
+            operation: Operation type (read/write)
+            file_path: Path to file
 
         Returns:
-            bool: True if operation is allowed, False otherwise
+            bool: Whether operation is allowed
         """
         try:
-            # Check if operation is allowed
-            if operation not in self.security_context.allowed_operations:
-                logger.error(f"Operation {operation} not allowed")
+            if operation not in ["read", "write"]:
+                logger.warning(f"Invalid operation: {operation}")
                 return False
 
-            # Resolve and validate path
-            abs_path = path.resolve()
-            project_path = self.security_context.project_path
-            if not abs_path.is_relative_to(project_path):
-                logger.error(f"Path {path} outside project directory")
+            file_path = Path(file_path).resolve()
+
+            if self._is_excluded(file_path):
+                logger.warning(f"File matches excluded pattern: {file_path}")
+                return False
+
+            if not self.is_file_allowed(file_path):
+                logger.info(f"Skipping virtual environment file: {file_path}")
                 return False
 
             return True
 
-        except (OSError, ValueError) as e:
-            logger.error(f"Error validating operation: {str(e)}")
+        except Exception as e:
+            logger.error(f"Error validating operation: {e}")
+            return False
+
+    def verify_fix(self, error: "Error", fix_content: str) -> bool:
+        """Verify fix is safe to apply.
+
+        Args:
+            error: Error being fixed
+            fix_content: Content of the fix
+
+        Returns:
+            bool: Whether fix is safe
+        """
+        try:
+            if not self.is_file_allowed(error.file_path):
+                return False
+
+            # Check for dangerous patterns
+            for pattern in self.DANGEROUS_PATTERNS:
+                if re.search(pattern, fix_content):
+                    logger.warning("Fix contains dangerous code patterns")
+                    return False
+
+            return True
+
+        except Exception as e:
+            logger.error(f"Error verifying fix: {e}")
             return False
 
     def get_project_files(self) -> List[Path]:
-        """
-        Get list of files in project directory
+        """Get all files in project directory.
 
         Returns:
-            List[Path]: List of file paths in project
-
-        Raises:
-            SecurityError: If access to project directory fails
+            List of file paths
         """
+        files = []
         try:
-            files = []
-            project_path = self.security_context.project_path
-            for item in project_path.rglob("*"):
-                if item.is_file():
-                    files.append(item)
-            return files
-        except (OSError, PermissionError) as e:
-            msg = f"Failed to access project files: {str(e)}"
-            raise SecurityError(msg)
+            for root, _, filenames in os.walk(self.project_root):
+                root_path = Path(root)
+                if self._is_excluded(root_path):
+                    continue
 
-    def verify_security_token(self, token: str) -> bool:
-        """
-        Verify if a security token is valid
+                for filename in filenames:
+                    file_path = root_path / filename
+                    if self.is_file_allowed(file_path):
+                        files.append(file_path)
 
-        Args:
-            token: Token to verify
+        except Exception as e:
+            logger.error(f"Error getting project files: {e}")
 
-        Returns:
-            bool: True if token is valid, False otherwise
-        """
-        context_token = self.security_context.security_token
-        return secrets.compare_digest(token, context_token)
-
-
-if __name__ == "__main__":
-    # Example usage
-    try:
-        secure_env = SecureEnvironment("./test_project")
-        context_dict = secure_env.security_context.to_dict()
-        print(f"Security context initialized: {context_dict}")
-    except SecurityError as e:
-        print(f"Failed to initialize secure environment: {str(e)}")
+        return files

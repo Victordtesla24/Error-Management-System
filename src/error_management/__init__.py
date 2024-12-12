@@ -1,16 +1,15 @@
-"""
-Error Management System Package
-Provides autonomous error detection and fixing capabilities
-"""
+"""Error management package."""
 
-from .error_manager import ErrorContext, ErrorManager
-from .secure_environment import SecureEnvironment, SecurityContext, SecurityError
+from .autonomous_agent import autonomous_agent
+from .error_manager import ErrorManager
+from .error_report import ErrorReport
+from .models import AgentActivity, AgentMetrics, ErrorTask
 
-__version__ = "0.1.0"
 __all__ = [
-    "SecureEnvironment",
-    "SecurityError",
-    "SecurityContext",
+    "autonomous_agent",
     "ErrorManager",
-    "ErrorContext",
+    "ErrorReport",
+    "ErrorTask",
+    "AgentMetrics",
+    "AgentActivity",
 ]

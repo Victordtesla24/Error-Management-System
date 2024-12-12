@@ -1,0 +1,23 @@
+[server]
+port = 8501
+address = "0.0.0.0"
+baseUrlPath = ""
+enableCORS = true
+enableXsrfProtection = true
+maxUploadSize = 200
+maxMessageSize = 200
+
+[browser]
+serverAddress = "localhost"
+gatherUsageStats = false
+
+[theme]
+primaryColor = "#007bff"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f8f9fa"
+textColor = "#212529"
+font = "sans serif"
+
+[logger]
+level = "info"
+messageFormat = "%(asctime)s [%(levelname)s] %(message)s"

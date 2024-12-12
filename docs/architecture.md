@@ -1,22 +1,15 @@
 # System Architecture
 
-## Overview
-This document describes the architecture of the Error Management System.
-
 ## Components
-1. Error Manager
-2. File Monitor
-3. Secure Environment
-4. Dashboard Service
+1. Error Management System
+2. Agent Monitor
+3. Dashboard Integration
+4. Testing Infrastructure
 
-## System Design
-- Microservices architecture
-- Event-driven error handling
-- Real-time monitoring
-- Secure execution environment
+## Design Patterns
+- Factory Pattern for error handlers
+- Observer Pattern for monitoring
+- Strategy Pattern for error resolution
 
-## Technical Stack
-- Python 3.11+
-- aiohttp for async web services
-- React for dashboard UI
-- Docker for containerization
+
+Last updated: Thu Dec 12 12:42:32 AEDT 2024

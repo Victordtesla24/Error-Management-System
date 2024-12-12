@@ -6,14 +6,10 @@
 3. System Tests
 4. Performance Tests
 
-## Test Framework
-- pytest for Python tests
-- Jest for React components
-- Coverage reporting
-- Continuous Integration
+## Test Coverage Goals
+- Line Coverage: 90%
+- Branch Coverage: 85%
+- Function Coverage: 95%
 
-## Test Categories
-- Functional Tests
-- Security Tests
-- Performance Tests
-- Error Recovery Tests
+
+Last updated: Thu Dec 12 12:42:32 AEDT 2024

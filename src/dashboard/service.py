@@ -1,188 +1,215 @@
-"""
-Dashboard Service Module
-Provides web API for system monitoring and control
-"""
+"""Dashboard service module."""
 
 import asyncio
 import logging
-import uuid
+from datetime import datetime
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List, Optional
+from uuid import uuid4
 
-import psutil
-from aiohttp import web
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class DashboardService:
-    """Dashboard service for system monitoring and control"""
+    """Dashboard service for managing system monitoring and visualization."""
 
     def __init__(self):
-        """Initialize dashboard service"""
-        self.app = web.Application()
-        self.setup_routes()
-        self.projects: Dict[str, Dict] = {}
-        self.agents: Dict[str, Dict] = {}
+        """Initialize dashboard service."""
+        self.setup_logging()
+        self._lock = asyncio.Lock()
+        self.agents = {}
+        self.projects = {}
+        self.notifications = []
+        self.background_tasks = set()
+        self.running = False
 
-    def setup_routes(self):
-        """Setup API routes"""
-        routes = [
-            # System endpoints
-            web.get("/api/system/status", self.get_system_status),
-            web.get("/api/system/security-metrics", self.get_security_metrics),
-            web.get("/api/system/metrics", self.get_metrics),
-            # System control endpoints
-            web.post("/api/system/start", self.start_system),
-            web.post("/api/system/stop", self.stop_system),
-            web.post("/api/system/restart", self.restart_system),
-            # Project endpoints
-            web.get("/api/projects", self.list_projects),
-            web.post("/api/projects", self.add_project),
-            web.get("/api/projects/{id}/status", self.get_project_status),
-            web.delete("/api/projects/{id}", self.remove_project),
-            # Agent endpoints
-            web.get("/api/agents", self.list_agents),
-            web.post("/api/agents", self.create_agent),
-            web.get("/api/agents/{id}/status", self.get_agent_status),
-            web.delete("/api/agents/{id}", self.remove_agent),
-        ]
-        self.app.add_routes(routes)
+    def setup_logging(self):
+        """Set up logging for dashboard service."""
+        log_dir = Path("logs")
+        log_dir.mkdir(exist_ok=True)
 
-    async def get_system_status(self, request: web.Request) -> web.Response:
-        """Get system status"""
-        status = {
-            "projects": len(self.projects),
-            "agents": len(self.agents),
-            "cpu_usage": psutil.cpu_percent(),
-            "memory_usage": psutil.virtual_memory().percent,
+        # Configure file handler
+        fh = logging.FileHandler(log_dir / "dashboard.log")
+        fh.setLevel(logging.INFO)
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
+        fh.setFormatter(formatter)
+
+        # Add handler if not already added
+        if not any(isinstance(h, logging.FileHandler) for h in logger.handlers):
+            logger.addHandler(fh)
+            logger.setLevel(logging.INFO)
+
+    @classmethod
+    async def create(cls) -> "DashboardService":
+        """Create and initialize a new dashboard service instance."""
+        service = cls()
+        await service.start()
+        return service
+
+    async def start(self):
+        """Start the dashboard service."""
+        try:
+            async with self._lock:
+                self.running = True
+                logger.info("Dashboard service started")
+                # Start background monitoring
+                await self.start_background_tasks()
+        except Exception as e:
+            logger.error(f"Failed to start dashboard service: {e}")
+            raise
+
+    async def stop(self):
+        """Stop the dashboard service."""
+        try:
+            async with self._lock:
+                self.running = False
+                await self.stop_background_tasks()
+                logger.info("Dashboard service stopped")
+        except Exception as e:
+            logger.error(f"Failed to stop dashboard service: {e}")
+            raise
+
+    async def get_system_status(self) -> Dict:
+        """Get current system status."""
+        try:
+            async with self._lock:
+                status = {
+                    "status": "operational" if self.running else "stopped",
+                    "active_agents": len(
+                        [a for a in self.agents.values() if a["status"] == "active"]
+                    ),
+                    "active_projects": len(self.projects),
+                    "last_update": datetime.now().isoformat(),
+                }
+                logger.debug(f"System status: {status}")
+                return status
+        except Exception as e:
+            logger.error(f"Failed to get system status: {e}")
+            return {
+                "status": "error",
+                "error": str(e),
+                "timestamp": datetime.now().isoformat(),
+            }
+
+    async def get_metrics(self) -> Dict:
+        """Get system metrics."""
+        try:
+            import psutil
+
+            metrics = {
+                "cpu_usage": psutil.cpu_percent(),
+                "memory_usage": psutil.virtual_memory().percent,
+                "timestamp": datetime.now().isoformat(),
+            }
+            logger.debug(f"System metrics: {metrics}")
+            return metrics
+        except Exception as e:
+            logger.error(f"Failed to get system metrics: {e}")
+            return {"error": str(e), "timestamp": datetime.now().isoformat()}
+
+    async def add_notification(self, message: str, level: str = "info"):
+        """Add a notification."""
+        async with self._lock:
+            self.notifications.append(
+                {
+                    "id": str(uuid4()),
+                    "message": message,
+                    "level": level,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
+
+    async def get_notifications(self) -> List[Dict]:
+        """Get all notifications."""
+        async with self._lock:
+            return self.notifications
+
+    async def create_agent(
+        self, name: str, agent_type: str, capabilities: List[str], **kwargs
+    ) -> Dict:
+        """Create a new agent."""
+        agent = {
+            "id": str(uuid4()),
+            "name": name,
+            "type": agent_type,
+            "role": agent_type,
+            "capabilities": capabilities,
+            "status": "active",
+            "created_at": datetime.now().isoformat(),
+            "last_heartbeat": datetime.now().isoformat(),
+            **kwargs,
         }
-        return web.json_response(status)
+        async with self._lock:
+            self.agents[agent["id"]] = agent
+        return agent
 
-    async def get_security_metrics(self, request: web.Request) -> web.Response:
-        """Get security metrics"""
-        metrics = {
-            "securityScore": 85,
-            "activeThreats": 0,
-            "certificateStatus": "valid",
+    async def get_agent_info(self, agent_id: str) -> Optional[Dict]:
+        """Get agent information."""
+        async with self._lock:
+            return self.agents.get(agent_id)
+
+    async def create_project(self, name: str, path: str, config: Dict) -> Dict:
+        """Create a new project."""
+        if not name or not path:
+            raise ValueError("Project name and path are required")
+
+        project = {
+            "id": str(uuid4()),
+            "name": name,
+            "path": path,
+            "config": config,
+            "created_at": datetime.now().isoformat(),
         }
-        return web.json_response(metrics)
+        async with self._lock:
+            self.projects[project["id"]] = project
+        return project
 
-    async def get_metrics(self, request: web.Request) -> web.Response:
-        """Get system metrics"""
-        metrics = {
-            "agent_count": len(self.agents),
-            "error_count": 0,
-            "fix_time": 0.5,
-        }
-        return web.json_response(metrics)
+    async def start_background_tasks(self, monitoring_interval: float = 60):
+        """Start background monitoring tasks."""
+        task = asyncio.create_task(self._monitor_loop(monitoring_interval))
+        self.background_tasks.add(task)
+        task.add_done_callback(self.background_tasks.discard)
 
-    async def start_system(self, request: web.Request) -> web.Response:
-        """Start system"""
-        return web.json_response({"status": "started"})
+    async def stop_background_tasks(self):
+        """Stop all background tasks."""
+        for task in self.background_tasks:
+            task.cancel()
+        await asyncio.gather(*self.background_tasks, return_exceptions=True)
+        self.background_tasks.clear()
 
-    async def stop_system(self, request: web.Request) -> web.Response:
-        """Stop system"""
-        return web.json_response({"status": "stopped"})
+    async def _monitor_loop(self, interval: float):
+        """Background monitoring loop."""
+        while self.running:
+            try:
+                await self.monitor_agents()
+                await asyncio.sleep(interval)
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Error in monitoring loop: {e}")
+                await asyncio.sleep(interval)
 
-    async def restart_system(self, request: web.Request) -> web.Response:
-        """Restart system"""
-        return web.json_response({"status": "restarted"})
+    async def monitor_agents(self) -> Dict:
+        """Monitor agent status."""
+        async with self._lock:
+            now = datetime.now()
+            active = 0
+            inactive = 0
 
-    async def list_projects(self, request: web.Request) -> web.Response:
-        """List all projects"""
-        projects = [{"id": pid, **project} for pid, project in self.projects.items()]
-        return web.json_response(projects)
+            for agent in self.agents.values():
+                last_heartbeat = datetime.fromisoformat(agent["last_heartbeat"])
+                if (now - last_heartbeat).total_seconds() > 300:  # 5 minutes timeout
+                    agent["status"] = "inactive"
+                    inactive += 1
+                else:
+                    agent["status"] = "active"
+                    active += 1
 
-    async def add_project(self, request: web.Request) -> web.Response:
-        """Add new project"""
-        data = await request.json()
-        path = data.get("path")
-
-        if not path or not Path(path).exists():
-            return web.Response(status=400)
-
-        project_id = str(uuid.uuid4())
-        self.projects[project_id] = {"path": path, "status": "active"}
-
-        return web.json_response({"id": project_id, "path": path})
-
-    async def get_project_status(self, request: web.Request) -> web.Response:
-        """Get project status"""
-        project_id = request.match_info["id"]
-        project = self.projects.get(project_id)
-
-        if not project:
-            return web.Response(status=404)
-
-        return web.json_response({"id": project_id, **project})
-
-    async def remove_project(self, request: web.Request) -> web.Response:
-        """Remove project"""
-        project_id = request.match_info["id"]
-
-        if project_id not in self.projects:
-            return web.Response(status=404)
-
-        del self.projects[project_id]
-        return web.Response(status=200)
-
-    async def list_agents(self, request: web.Request) -> web.Response:
-        """List all agents"""
-        agents = [{"id": aid, **agent} for aid, agent in self.agents.items()]
-        return web.json_response(agents)
-
-    async def create_agent(self, request: web.Request) -> web.Response:
-        """Create new agent"""
-        agent_id = str(uuid.uuid4())
-        self.agents[agent_id] = {"status": "active", "type": "error_monitor"}
-
-        return web.json_response({"id": agent_id, **self.agents[agent_id]})
-
-    async def get_agent_status(self, request: web.Request) -> web.Response:
-        """Get agent status"""
-        agent_id = request.match_info["id"]
-        agent = self.agents.get(agent_id)
-
-        if not agent:
-            return web.Response(status=404)
-
-        return web.json_response({"id": agent_id, **agent})
-
-    async def remove_agent(self, request: web.Request) -> web.Response:
-        """Remove agent"""
-        agent_id = request.match_info["id"]
-
-        if agent_id not in self.agents:
-            return web.Response(status=404)
-
-        del self.agents[agent_id]
-        return web.Response(status=200)
-
-
-async def main():
-    """Main entry point"""
-    try:
-        dashboard = DashboardService()
-        runner = web.AppRunner(dashboard.app)
-        await runner.setup()
-
-        site = web.TCPSite(runner, "localhost", 8080)
-        await site.start()
-
-        logger.info("Dashboard service running on http://localhost:8080")
-
-        # Keep the service running
-        while True:
-            await asyncio.sleep(3600)
-
-    except Exception as e:
-        logger.error(f"Error in dashboard service: {str(e)}")
-    finally:
-        await runner.cleanup()
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+            return {
+                "status": "ok" if inactive == 0 else "warning",
+                "active_agents": active,
+                "inactive_agents": inactive,
+                "timestamp": now.isoformat(),
+            }

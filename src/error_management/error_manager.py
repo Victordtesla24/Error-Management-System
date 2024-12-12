@@ -1,239 +1,189 @@
-"""
-Error Management Core Module
-Handles error detection, analysis, and automated fixing
-"""
+"""Error management module."""
 
-import ast
 import asyncio
 import logging
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
-from .secure_environment import SecureEnvironment, SecurityError
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format=("%(asctime)s - %(name)s - %(levelname)s - %(message)s"),
-)
 logger = logging.getLogger(__name__)
 
 
 @dataclass
-class ErrorContext:
-    """Context information for detected errors"""
+class ErrorModel:
+    """Model representing an error."""
 
-    file_path: Path
-    error_type: str
-    code_context: str
-    line_number: int
-    severity: int
-
-    def to_dict(self) -> dict:
-        """Convert error context to dictionary"""
-        return {
-            "file_path": str(self.file_path),
-            "error_type": self.error_type,
-            "code_context": self.code_context,
-            "line_number": self.line_number,
-            "severity": self.severity,
-        }
+    id: str
+    type: str
+    message: str
+    file: str
+    line: int
+    timestamp: datetime
+    status: str = "new"
+    fix_attempts: int = 0
+    resolved: bool = False
+    resolution: Optional[str] = None
 
 
 class ErrorManager:
-    """
-    Core error management system
-    Handles error detection, analysis, and fixing
-    """
+    """Manages error detection and resolution."""
 
-    def __init__(self, secure_env: SecureEnvironment):
-        """
-        Initialize error manager with secure environment
+    def __init__(self, base_path: str = "."):
+        """Initialize error manager."""
+        self.base_path = base_path
+        self.errors: Dict[str, ErrorModel] = {}
+        self._lock = asyncio.Lock()
+        self.running = False
+        self.issues = {}
+        self.issues_by_date = {}
+        self.last_update = datetime.now()
+        self.setup_logging()
 
-        Args:
-            secure_env: Initialized secure environment
-        """
-        self.secure_env = secure_env
-        self.current_errors: Dict[Path, List[ErrorContext]] = {}
-        self._running = False
-        logger.info("Error manager initialized")
+    def setup_logging(self):
+        """Set up logging for error manager."""
+        log_dir = Path("logs")
+        log_dir.mkdir(exist_ok=True)
 
-    async def start_monitoring(self):
-        """Start continuous error monitoring"""
-        self._running = True
-        logger.info("Starting error monitoring")
+        # Configure file handler
+        fh = logging.FileHandler(log_dir / "error_manager.log")
+        fh.setLevel(logging.INFO)
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
+        fh.setFormatter(formatter)
 
-        while self._running:
-            try:
-                await self._scan_for_errors()
-                await asyncio.sleep(2)  # Scan interval
-            except Exception as e:
-                logger.error(f"Error during monitoring: {str(e)}")
+        # Add handler if not already added
+        if not any(isinstance(h, logging.FileHandler) for h in logger.handlers):
+            logger.addHandler(fh)
+            logger.setLevel(logging.INFO)
 
-    async def stop_monitoring(self):
-        """Stop error monitoring"""
-        self._running = False
-        logger.info("Stopping error monitoring")
+    async def start(self):
+        """Start the error manager."""
+        async with self._lock:
+            self.running = True
+            logger.info("Error manager started")
 
-    async def _scan_for_errors(self):
-        """Scan project files for errors"""
-        try:
-            files = self.secure_env.get_project_files()
-            for file_path in files:
-                if not self.secure_env.validate_operation("read", file_path):
-                    continue
+    async def stop(self):
+        """Stop the error manager."""
+        async with self._lock:
+            self.running = False
+            logger.info("Error manager stopped")
 
-                if file_path.suffix == ".py":
-                    await self._analyze_python_file(file_path)
+    async def add_error(self, error: ErrorModel):
+        """Add a new error."""
+        async with self._lock:
+            self.errors[error.id] = error
+            logger.info(f"Added error {error.id}: {error.message}")
 
-        except SecurityError as e:
-            logger.error(f"Security error during scan: {str(e)}")
-        except Exception as e:
-            logger.error(f"Error during scan: {str(e)}")
+    async def get_error(self, error_id: str) -> Optional[ErrorModel]:
+        """Get error by ID."""
+        async with self._lock:
+            return self.errors.get(error_id)
 
-    async def _analyze_python_file(self, file_path: Path):
-        """
-        Analyze Python file for errors
+    async def get_errors(self) -> List[ErrorModel]:
+        """Get all errors."""
+        async with self._lock:
+            return list(self.errors.values())
 
-        Args:
-            file_path: Path to Python file
-        """
-        try:
-            with open(file_path, "r") as f:
-                content = f.read()
+    async def mark_resolved(self, error_id: str, resolution: str):
+        """Mark an error as resolved."""
+        async with self._lock:
+            if error := self.errors.get(error_id):
+                error.resolved = True
+                error.resolution = resolution
+                error.status = "resolved"
+                logger.info(f"Marked error {error_id} as resolved")
 
-            # Syntax check
-            try:
-                ast.parse(content)
-            except SyntaxError as e:
-                context = content.splitlines()[e.lineno - 1] if e.lineno else ""
-                await self._handle_error(
-                    ErrorContext(
-                        file_path=file_path,
-                        error_type="syntax_error",
-                        code_context=context,
-                        line_number=e.lineno or 0,
-                        severity=1,
-                    )
-                )
+    async def increment_fix_attempts(self, error_id: str):
+        """Increment fix attempts for an error."""
+        async with self._lock:
+            if error := self.errors.get(error_id):
+                error.fix_attempts += 1
+                logger.info(f"Incremented fix attempts for error {error_id}")
 
-            # Additional error checks
-            await self._check_code_quality(file_path, content)
+    def add_issue(self, file: str, issue: str, line: int = None):
+        """Add an issue to tracking."""
+        if file not in self.issues:
+            self.issues[file] = []
 
-        except Exception as e:
-            logger.error(f"Error analyzing {file_path}: {str(e)}")
+        issue_data = {
+            "description": issue,
+            "line": line,
+            "timestamp": datetime.now().isoformat(),
+        }
+        self.issues[file].append(issue_data)
 
-    async def _check_code_quality(self, file_path: Path, content: str):
-        """
-        Check code quality and patterns
+        # Track by date
+        date_key = datetime.now().date().isoformat()
+        if date_key not in self.issues_by_date:
+            self.issues_by_date[date_key] = 0
+        self.issues_by_date[date_key] += 1
 
-        Args:
-            file_path: Path to file
-            content: File content
-        """
-        # Implement code quality checks
-        # This is where integration with Cursor AI would happen
-        pass
+        self.last_update = datetime.now()
+        logger.info(f"Added issue for {file}: {issue}")
 
-    async def _handle_error(self, error: ErrorContext):
-        """
-        Handle detected error
+    def remove_issue(self, file: str, issue_index: int):
+        """Remove an issue from tracking."""
+        if file in self.issues and 0 <= issue_index < len(self.issues[file]):
+            issue = self.issues[file].pop(issue_index)
 
-        Args:
-            error: Error context
-        """
-        if error.file_path not in self.current_errors:
-            self.current_errors[error.file_path] = []
+            # Update date tracking
+            if issue.get("timestamp"):
+                date_key = datetime.fromisoformat(issue["timestamp"]).date().isoformat()
+                if (
+                    date_key in self.issues_by_date
+                    and self.issues_by_date[date_key] > 0
+                ):
+                    self.issues_by_date[date_key] -= 1
 
-        # Check if error already exists
-        for existing_error in self.current_errors[error.file_path]:
-            if (
-                existing_error.line_number == error.line_number
-                and existing_error.error_type == error.error_type
-            ):
-                return
+            if not self.issues[file]:
+                del self.issues[file]
 
-        self.current_errors[error.file_path].append(error)
-        logger.info(f"New error detected: {error.to_dict()}")
+            self.last_update = datetime.now()
+            logger.info(f"Removed issue {issue_index} from {file}")
 
-        # Attempt to fix error if possible
-        await self._attempt_fix(error)
+    def get_issues(self) -> List[Dict]:
+        """Get list of issues by file."""
+        issues = {}
+        for error in self.errors.values():
+            if not error.resolved:
+                if error.file not in issues:
+                    issues[error.file] = []
+                issues[error.file].append(error.message)
 
-    async def _attempt_fix(self, error: ErrorContext):
-        """
-        Attempt to fix detected error
+        return [{"file": k, "issues": v} for k, v in issues.items()]
 
-        Args:
-            error: Error context
-        """
-        if not self.secure_env.validate_operation("write", error.file_path):
-            logger.error("Cannot fix error: Write operation not allowed")
-            return
+    def get_error_stats(self) -> Dict:
+        """Get error statistics."""
+        total = len(self.errors)
+        resolved = len([e for e in self.errors.values() if e.resolved])
+        unresolved = total - resolved
 
-        try:
-            # Implement fix logic
-            # This is where integration with Cursor AI would happen
-            pass
+        by_type = {}
+        by_file = {}
 
-        except Exception as e:
-            logger.error(f"Error attempting fix: {str(e)}")
+        for error in self.errors.values():
+            by_type[error.type] = by_type.get(error.type, 0) + 1
+            by_file[error.file] = by_file.get(error.file, 0) + 1
 
-    def get_current_errors(self) -> Dict[Path, List[ErrorContext]]:
-        """
-        Get current errors
+        return {
+            "total_issues": total,
+            "resolved_issues": resolved,
+            "unresolved_issues": unresolved,
+            "issues_by_type": by_type,
+            "issues_by_file": by_file,
+            "timestamp": datetime.now().isoformat(),
+        }
 
-        Returns:
-            Dict[Path, List[ErrorContext]]: Current errors by file
-        """
-        return self.current_errors
-
-    def _understand_context(self, error: ErrorContext) -> bool:
-        """
-        Analyze and understand error context
-
-        Args:
-            error: Error context to analyze
-
-        Returns:
-            bool: True if context is understood, False otherwise
-        """
-        try:
-            # Basic validation
-            if not error.code_context or not error.error_type:
-                return False
-
-            # Check if we have enough context
-            if len(error.code_context.strip()) < 3:
-                return False
-
-            # Verify line number makes sense
-            if error.line_number < 1:
-                return False
-
-            # Verify severity is in valid range
-            if not 0 <= error.severity <= 5:
-                return False
-
-            return True
-
-        except Exception as e:
-            logger.error(f"Error understanding context: {str(e)}")
-            return False
-
-
-async def main():
-    """Main function for testing"""
-    try:
-        secure_env = SecureEnvironment("./test_project")
-        error_manager = ErrorManager(secure_env)
-        await error_manager.start_monitoring()
-
-    except SecurityError as e:
-        logger.error(f"Security error: {str(e)}")
-    except Exception as e:
-        logger.error(f"Error: {str(e)}")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    def cleanup_old_issues(self, days: int = 30):
+        """Clean up issues older than specified days."""
+        cutoff = datetime.now() - timedelta(days=days)
+        for file in list(self.issues.keys()):
+            self.issues[file] = [
+                issue
+                for issue in self.issues[file]
+                if datetime.fromisoformat(issue["timestamp"]) >= cutoff
+            ]
+            if not self.issues[file]:
+                del self.issues[file]

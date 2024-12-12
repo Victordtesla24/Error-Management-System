@@ -1,0 +1,53 @@
+{
+    "name": "Error Management System Dev",
+    "image": "docker/dev-environments-go:stable-1",
+    "workspaceFolder": "/app",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "golang.go",
+                "ms-azuretools.vscode-docker",
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-python.black-formatter",
+                "ms-python.flake8"
+            ],
+            "settings": {
+                "go.toolsManagement.checkForUpdates": "local",
+                "go.useLanguageServer": true,
+                "go.gopath": "/go",
+                "go.goroot": "/usr/local/go",
+                "go.toolsEnvVars": {
+                    "GOPATH": "/go",
+                    "GOROOT": "/usr/local/go"
+                },
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
+                "python.linting.enabled": true,
+                "python.linting.flake8Enabled": true,
+                "python.formatting.provider": "black",
+                "editor.formatOnSave": true
+            }
+        }
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/go:1": {
+            "version": "1.23"
+        },
+        "ghcr.io/devcontainers/features/python:1": {
+            "version": "3.11",
+            "installTools": true
+        }
+    },
+    "forwardPorts": [8080, 8502],
+    "postCreateCommand": "apt-get update && apt-get install -y python3-pip && mkdir -p /go && go mod download && pip install --no-cache-dir -r requirements.txt -r requirements-grpc.txt -r requirements-streamlit.txt",
+    "remoteUser": "root",
+    "containerEnv": {
+        "GOPATH": "/go",
+        "GOROOT": "/usr/local/go",
+        "PATH": "${containerEnv:PATH}:/usr/local/go/bin:/go/bin",
+        "PYTHONPATH": "${containerEnv:PYTHONPATH}:/app/src"
+    },
+    "mounts": [
+        "source=${localWorkspaceFolder}/go,target=/go,type=bind,consistency=cached"
+    ]
+}

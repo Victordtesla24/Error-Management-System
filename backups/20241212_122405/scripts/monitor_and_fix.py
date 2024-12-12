@@ -9,7 +9,6 @@ from typing import Set
 
 import pytest
 from watchdog.events import FileSystemEventHandler
-from watchdog.observers import Observer
 
 from src.error_management.simple_handler import error_handler
 from src.error_management.test_fixer import test_fixer

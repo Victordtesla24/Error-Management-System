@@ -5,7 +5,7 @@ import sys
 import traceback
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Type
+from typing import Any, Callable, Dict, Type
 
 # Configure logging
 logging.basicConfig(

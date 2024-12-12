@@ -1,7 +1,6 @@
 """Automatic test error fixing system."""
 
 import logging
-import os
 import sys
 import traceback
 from pathlib import Path

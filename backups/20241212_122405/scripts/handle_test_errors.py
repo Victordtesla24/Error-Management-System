@@ -247,7 +247,7 @@ async def main():
         error_manager = ErrorManager(project_root)
 
         # Load configuration
-        config = ConfigManager.load_config("error_management_config.yaml")
+        ConfigManager.load_config("error_management_config.yaml")
         logger.info("Loaded error management configuration")
 
         # Enable virtual environment monitoring

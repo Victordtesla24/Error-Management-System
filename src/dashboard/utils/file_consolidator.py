@@ -3,7 +3,6 @@ import hashlib
 import logging
 import os
 import re
-import threading
 import time
 from collections import defaultdict
 from dataclasses import dataclass
@@ -74,8 +73,6 @@ class FileGroup:
 
 class TimeoutError(Exception):
     """Raised when an operation times out."""
-
-    pass
 
 
 class FileConsolidator:

@@ -2,16 +2,10 @@
 
 import asyncio
 from datetime import datetime
-from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
-import pytest_asyncio
 
 from src.dashboard.monitoring.agent_monitor import AgentMonitor
-from src.error_management.factory import ServiceFactory
-
-from .fixtures import cleanup_monitor, mock_services, monitor, test_project_path
 
 
 @pytest.mark.asyncio

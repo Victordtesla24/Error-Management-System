@@ -2,14 +2,13 @@
 
 import asyncio
 from pathlib import Path
-from typing import Any, AsyncGenerator, Generator, Tuple
+from typing import AsyncGenerator, Tuple
 from unittest.mock import MagicMock, patch
 
 import pytest
 import pytest_asyncio
 
 from src.dashboard.monitoring.agent_monitor import AgentMonitor
-from src.error_management.factory import ServiceFactory
 from src.error_management.memory_manager import MemoryManager
 from src.error_management.metrics import MetricsCollector, SystemMetrics
 from src.error_management.service import ErrorManagementService

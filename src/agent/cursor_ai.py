@@ -15,8 +15,6 @@ logger = logging.getLogger(__name__)
 class APIKeyError(Exception):
     """Raised when there are issues with the API key"""
 
-    pass
-
 
 class CursorAIInterface:
     """Interface for communicating with Cursor AI"""

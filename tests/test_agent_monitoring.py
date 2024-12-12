@@ -2,13 +2,10 @@
 
 import asyncio
 from datetime import datetime
-from typing import Any
 
 import pytest
 
 from src.dashboard.monitoring.agent_monitor import AgentMonitor
-
-from .fixtures import cleanup_monitor, mock_services, monitor, test_project_path
 
 
 @pytest.mark.asyncio

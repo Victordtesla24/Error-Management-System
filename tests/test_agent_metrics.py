@@ -1,7 +1,5 @@
 """Tests for agent metrics and monitoring."""
 
-import asyncio
-import os
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -11,7 +9,6 @@ import streamlit as st
 
 from src.dashboard.metrics.agent_metrics import AgentMetricsCollector
 from src.error_management.memory_manager import MemoryManager
-from src.error_management.metrics import MetricsCollector, SystemMetrics
 from src.error_management.service import ErrorManagementService
 
 

@@ -1,6 +1,5 @@
 """Project management and scanning page."""
 
-import os
 from datetime import datetime
 from pathlib import Path
 

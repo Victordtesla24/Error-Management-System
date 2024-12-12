@@ -9,14 +9,12 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
 # Add project root to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.error_management.agent_manager import agent_manager
 from src.error_management.autonomous_agent import autonomous_agent
 from src.error_management.error_manager import ErrorManager
 

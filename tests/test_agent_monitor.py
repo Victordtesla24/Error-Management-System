@@ -1,11 +1,8 @@
 """Tests for agent monitoring functionality."""
 
 import asyncio
-import threading
-import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest

@@ -1,12 +1,4 @@
-from .._events import (
-    ConnectionClosed,
-    Data,
-    EndOfMessage,
-    Event,
-    InformationalResponse,
-    Request,
-    Response,
-)
+from .._events import Data, EndOfMessage, Response
 from .helpers import normalize_data_events
 
 

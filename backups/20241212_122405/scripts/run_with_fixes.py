@@ -2,7 +2,6 @@
 
 import logging
 import sys
-from pathlib import Path
 
 from src.error_management.runtime_fixer import runtime_fixer
 
@@ -25,7 +24,7 @@ def main():
 
     try:
         # Import and use ErrorContext (will be auto-fixed)
-        from src.error_management.models import ErrorContext
+        pass
 
         logger.info("Successfully imported ErrorContext")
 

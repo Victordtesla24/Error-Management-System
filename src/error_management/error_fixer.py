@@ -1,11 +1,10 @@
 """Error fixing module."""
 
-import asyncio
 import logging
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 
-from .models import ErrorFix, ErrorStatus, ErrorTask
+from .models import ErrorFix, ErrorTask
 
 
 class ErrorFixer:
@@ -161,7 +160,7 @@ class ErrorFixer:
         try:
             file_path = Path(error.file_path)
             content = file_path.read_text().splitlines()
-            line = content[error.line_number - 1]
+            content[error.line_number - 1]
 
             # Add specific runtime error fixes here
             # For now, just log the error
@@ -177,7 +176,7 @@ class ErrorFixer:
         try:
             file_path = Path(error.file_path)
             content = file_path.read_text().splitlines()
-            line = content[error.line_number - 1]
+            content[error.line_number - 1]
 
             # Add specific Streamlit error fixes here
             # For now, just log the error

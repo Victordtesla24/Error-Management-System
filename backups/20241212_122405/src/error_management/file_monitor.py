@@ -4,24 +4,18 @@ File Monitor - Monitors file system changes and triggers error detection
 
 import ast
 import asyncio
-import fnmatch
-import hashlib
 import logging
 import os
 import re
-import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Union
+from typing import Optional
 
 import aiofiles
 from watchdog.events import FileModifiedEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
-from src.error_management.error_context import ErrorContext
-from src.error_management.error_manager import ErrorManager
 from src.error_management.models import Error
-from src.error_management.secure_environment import SecureEnvironment
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

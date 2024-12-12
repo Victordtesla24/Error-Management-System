@@ -4,7 +4,7 @@ import logging
 import os
 import re
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional, Set
+from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
     from src.error_management.models import Error
@@ -14,8 +14,6 @@ logger = logging.getLogger(__name__)
 
 class SecurityError(Exception):
     """Security related error."""
-
-    pass
 
 
 class SecureEnvironment:

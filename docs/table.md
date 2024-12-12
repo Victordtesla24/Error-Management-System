@@ -1,3 +1,0 @@
-| Name  | Value  |
-| ----- | -----  |
-| Hello | World  |

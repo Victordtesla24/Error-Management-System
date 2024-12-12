@@ -1,6 +1,7 @@
 # Error Management System API Documentation
 
 ## Overview
+
 The Error Management System provides a comprehensive API for detecting, managing, and fixing errors in software projects. It includes memory management, security validation, and automated error resolution capabilities.
 
 ## Core Components
@@ -10,18 +11,23 @@ The Error Management System provides a comprehensive API for detecting, managing
 The main class responsible for managing errors and coordinating system components.
 
 #### Initialization
+
 ```python
 manager = ErrorManager(project_root: Optional[Path] = None)
 ```
+
 - `project_root`: Optional path to the project root directory
 
 #### Methods
 
 ##### Error Management
+
 ```python
 async def add_error_async(error: Error) -> bool
 ```
+
 Adds an error to the management system asynchronously.
+
 - Parameters:
   - `error`: Error object containing error details
 - Returns: Boolean indicating success
@@ -29,7 +35,9 @@ Adds an error to the management system asynchronously.
 ```python
 async def process_error(error_id: str) -> Dict[str, Error]
 ```
+
 Processes an error asynchronously.
+
 - Parameters:
   - `error_id`: Unique identifier of the error
 - Returns: Dictionary containing processed error if successful
@@ -37,22 +45,28 @@ Processes an error asynchronously.
 ```python
 async def apply_fix(error_id: str, fix_content: str) -> bool
 ```
+
 Applies a fix to an error asynchronously.
+
 - Parameters:
   - `error_id`: Unique identifier of the error
   - `fix_content`: The fix content to apply
 - Returns: Boolean indicating success
 
 ##### Memory Management
+
 ```python
 def get_memory_metrics() -> Dict[str, List[Any]]
 ```
+
 Retrieves current memory usage metrics.
+
 - Returns: Dictionary containing memory usage history
 
 ```python
 def adjust_thresholds()
 ```
+
 Adjusts memory thresholds based on usage patterns.
 
 ### MemoryManager
@@ -60,6 +74,7 @@ Adjusts memory thresholds based on usage patterns.
 Manages system resource usage and thresholds.
 
 #### Initialization
+
 ```python
 manager = MemoryManager()
 ```
@@ -69,7 +84,9 @@ manager = MemoryManager()
 ```python
 def set_threshold(component_type: str, component_name: str, threshold: ResourceThreshold)
 ```
+
 Sets resource thresholds for a component.
+
 - Parameters:
   - `component_type`: Type of component ("file", "function", "class", "method")
   - `component_name`: Name of the component
@@ -78,7 +95,9 @@ Sets resource thresholds for a component.
 ```python
 def get_threshold(component_type: str, component_name: str) -> ResourceThreshold
 ```
+
 Gets resource thresholds for a component.
+
 - Parameters:
   - `component_type`: Type of component
   - `component_name`: Name of the component
@@ -87,12 +106,15 @@ Gets resource thresholds for a component.
 ```python
 def get_usage_metrics() -> Dict[str, List[ResourceUsage]]
 ```
+
 Gets historical usage metrics.
+
 - Returns: Dictionary containing usage history
 
 ## Data Models
 
 ### Error
+
 ```python
 @dataclass
 class Error:
@@ -107,6 +129,7 @@ class Error:
 ```
 
 ### ResourceThreshold
+
 ```python
 @dataclass
 class ResourceThreshold:
@@ -116,6 +139,7 @@ class ResourceThreshold:
 ```
 
 ### ResourceUsage
+
 ```python
 @dataclass
 class ResourceUsage:
@@ -127,6 +151,7 @@ class ResourceUsage:
 ## Usage Examples
 
 ### Basic Error Management
+
 ```python
 # Initialize manager
 manager = ErrorManager(Path("/path/to/project"))
@@ -152,6 +177,7 @@ success = await manager.apply_fix("error_1", "fixed_content")
 ```
 
 ### Memory Management
+
 ```python
 # Get memory metrics
 metrics = manager.get_memory_metrics()
@@ -168,6 +194,7 @@ await manager.stop()
 The system includes comprehensive error handling:
 
 1. Security Validation
+
 ```python
 try:
     await manager.add_error_async(error)
@@ -176,12 +203,14 @@ except SecurityError as e:
 ```
 
 2. Memory Threshold Violations
+
 ```python
 # System automatically handles memory threshold violations
 # and logs warnings when thresholds are exceeded
 ```
 
 3. General Error Handling
+
 ```python
 try:
     await manager.process_error(error_id)
@@ -192,16 +221,19 @@ except Exception as e:
 ## Best Practices
 
 1. Memory Management
+
 - Monitor memory usage regularly
 - Adjust thresholds based on application needs
 - Handle threshold violations appropriately
 
 2. Error Processing
+
 - Implement retry logic for failed fixes
 - Monitor fix success rates
 - Maintain error history for analysis
 
 3. Security
+
 - Always validate file paths
 - Verify fixes before applying
 - Maintain secure environment boundaries
@@ -226,3 +258,4 @@ file_threshold = ResourceThreshold(
     response_time_limit=3.0
 )
 manager._memory_manager.set_threshold("file", "path/to/file", file_threshold)
+```

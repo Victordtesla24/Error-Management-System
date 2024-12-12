@@ -2,15 +2,11 @@
 
 import asyncio
 from datetime import datetime
-from pathlib import Path
-from typing import Any, Dict, Generator
+from typing import Any, Dict
 
 import pytest
-import pytest_asyncio
 
 from src.dashboard.monitoring.agent_monitor import AgentMonitor
-
-from .fixtures import cleanup_monitor, mock_services, monitor, test_project_path
 
 
 def create_test_task(task_type: str = "Run Tests") -> Dict[str, Any]:

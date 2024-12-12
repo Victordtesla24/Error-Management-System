@@ -11,7 +11,7 @@ from numpy import (
     nan_to_num,
     real_if_close,
 )
-from numpy.testing import assert_, assert_array_equal, assert_equal, assert_raises
+from numpy.testing import assert_, assert_array_equal, assert_equal
 
 
 def assert_all(x):

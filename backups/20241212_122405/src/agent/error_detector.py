@@ -6,8 +6,6 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from src.error_management.models import Error
-
 
 class ErrorDetector:
     """Detect and analyze errors in code."""
@@ -264,7 +262,7 @@ class ErrorDetector:
                 # Extract object and missing attribute
                 parts = message.split("'")
                 if len(parts) >= 3:
-                    obj_name = parts[0].strip()
+                    parts[0].strip()
                     missing_attr = parts[1]
 
                     # Check for typos in attribute name

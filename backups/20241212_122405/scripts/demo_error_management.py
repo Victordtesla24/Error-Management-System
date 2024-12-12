@@ -5,7 +5,6 @@ import sys
 import time
 from pathlib import Path
 
-from src.error_management.error import Error
 from src.error_management.simple_handler import error_handler
 from src.error_management.test_fixer import test_fixer
 
@@ -60,7 +59,7 @@ def run_demo():
         logger.info("\nRunning tests first time (with errors)...")
         import pytest
 
-        result = pytest.main(["-v", str(test_file)])
+        pytest.main(["-v", str(test_file)])
 
         # Wait for error fixing system to process
         logger.info("\nWaiting for error fixing system...")
@@ -77,7 +76,7 @@ def run_demo():
 
         # Run tests again - should be fixed
         logger.info("\nRunning tests again (after fixes)...")
-        result = pytest.main(["-v", str(test_file)])
+        pytest.main(["-v", str(test_file)])
 
         # Show error statistics
         stats = error_handler.get_stats()

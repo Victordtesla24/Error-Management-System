@@ -151,7 +151,7 @@ async def test_system_scalability(
     service: ErrorManagementService, tmp_path: Path
 ) -> None:
     """Test system scalability with increasing load."""
-    baseline_memory = get_process_memory()
+    get_process_memory()
 
     # Test with increasing numbers of errors
     error_counts = [10, 50, 100]

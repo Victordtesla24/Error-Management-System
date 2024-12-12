@@ -18,6 +18,3 @@
 # Check that various deprecation warnings are raised
 
 # flake8: noqa
-
-import pyarrow as pa
-import pytest

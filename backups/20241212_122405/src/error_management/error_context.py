@@ -1,7 +1,6 @@
 """Error context analysis module."""
 
 import ast
-import inspect
 import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple

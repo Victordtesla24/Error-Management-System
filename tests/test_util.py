@@ -39,7 +39,6 @@ def func_a(whatever):
 
     It computes {operation}.
     """
-    pass
 
 
 @doc(
@@ -73,7 +72,6 @@ def func_c(whatever):
     >>> func_c()
     C
     """
-    pass
 
 
 @doc(func_a, method="func_d", operation="D")
@@ -100,7 +98,6 @@ def func_f(whatever):
     >>> dict(x = "x", y = "y")
     >>> set((1, 2, 3))
     """
-    pass
 
 
 def test_docstring_formatting():

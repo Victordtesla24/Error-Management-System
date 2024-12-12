@@ -3,7 +3,7 @@
 import asyncio
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from .error_manager import ErrorManager
 from .file_analyzer import FileAnalyzer

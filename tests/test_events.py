@@ -2,12 +2,10 @@ from http import HTTPStatus
 
 import pytest
 
-from .. import _events
 from .._events import (
     ConnectionClosed,
     Data,
     EndOfMessage,
-    Event,
     InformationalResponse,
     Request,
     Response,

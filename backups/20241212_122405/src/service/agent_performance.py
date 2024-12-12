@@ -33,7 +33,7 @@ def timeout_context(seconds: int):
 
 class AgentPerformanceMonitor:
     def analyze_performance(self, timeout=55):
-        start_time = time.time()
+        time.time()
         try:
             with timeout_context(timeout):
                 metrics = self.collect_metrics()

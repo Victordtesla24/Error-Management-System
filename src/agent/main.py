@@ -27,7 +27,7 @@ async def main():
         # Initialize components
         project_path = Path.cwd()
         error_detector = ErrorDetector(project_path)
-        error_fixer = ErrorFixer()
+        ErrorFixer()
 
         # Add monitored paths
         error_detector.add_monitored_path(project_path / "src")

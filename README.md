@@ -1,55 +1,106 @@
 # Error Management System
 
-An automated system for managing and handling errors efficiently in software projects.
+A comprehensive error detection and management system built with Streamlit.
+
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://error-management-system.streamlit.app)
 
 ## Features
 
-- Automated error detection and handling
-- Project structure verification and maintenance
-- Code quality checks and fixes
+### Error Management
+- Real-time error detection and analysis
+- Automated error resolution
+- Pattern-based error prediction
+- Context-aware fixes
+
+### Dashboard
+- Interactive error monitoring
+- Real-time system metrics
+- Custom visualization tools
+- User-friendly controls
+
+### Automation
+- Automated testing and validation
+- Continuous code quality checks
 - Documentation management
-- Memory threshold monitoring
 - Git repository optimization
 
-## Setup
+## Quick Start
 
-1. Clone the repository
-2. Install dependencies:
-
+1. **Setup Project**
    ```bash
-   pip install -r requirements.txt
+   ./scripts/project_setup.sh
    ```
 
-3. Run the verification script:
+2. **Configure Environment**
+   - Copy `.env.example` to `.env`
+   - Update environment variables
 
+3. **Run Application**
    ```bash
-   ./scripts/verify_and_fix.sh
+   ./scripts/run.sh
    ```
 
-## Directory Structure
+4. Open browser at `http://localhost:8502`
 
-- `src/`: Source code
-- `tests/`: Test files
-- `docs/`: Documentation
-- `scripts/`: Utility scripts
-- `logs/`: Log files
+## Development
+
+### Prerequisites
+- Python 3.9+
+- Git
+- Virtual environment
+
+### Installation
+```bash
+# Clone repository
+git clone https://github.com/Victordtesla24/Error-Management-System.git
+cd Error-Management-System
+
+# Setup project
+./scripts/project_setup.sh
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### Project Structure
+```text
+error-management-system/
+├── src/               # Source code
+│   ├── core/         # Core logic
+│   ├── dashboard/    # Streamlit interface
+│   └── utils/        # Utilities
+├── tests/            # Test suite
+├── docs/             # Documentation
+└── scripts/          # Utility scripts
+```
+
+### Running Tests
+```bash
+pytest tests/
+```
+
+### Code Quality
+```bash
+./scripts/verify_and_fix.sh --all
+```
 
 ## Documentation
 
+- [User Guide](docs/user/guide.md)
+- [API Documentation](docs/api/README.md)
 - [Architecture](docs/architecture.md)
-- [Implementation Plans](docs/implementation_plans.md)
-- [Testing Architecture](docs/testing_architecture.md)
 
 ## Contributing
 
 1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+2. Create feature branch (`git checkout -b feature/name`)
+3. Commit changes (`git commit -am 'Add feature'`)
+4. Push branch (`git push origin feature/name`)
+5. Create Pull Request
 
 ## License
 
-MIT License
+MIT License - see [LICENSE](LICENSE) for details
 
-Last updated: $(date)
+---
+Built with [Streamlit](https://streamlit.io) 🎈

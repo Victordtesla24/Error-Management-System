@@ -193,42 +193,52 @@ EOL
     fi
 }
 
-# Function to consolidate and reorganize documentation
+# Function to consolidate documentation
 consolidate_docs() {
-    echo "Consolidating and reorganizing documentation..."
+    echo "Starting documentation consolidation..."
     
-    # Create new consolidated files
-    mkdir -p docs/pages
+    # 1. Consolidate Implementation Plans
+    echo "Consolidating implementation plans..."
+    cat docs/implementation/phase*_*.md >> docs/implementation/development_plan.md
+    rm docs/implementation/phase*_*.md
+    rm -f docs/implementation_plans.md
+
+    # 2. Merge Architecture Documentation
+    echo "Merging architecture documentation..."
+    cat docs/documentation.md | grep -A 1000 "## Architecture" | grep -B 1000 "##" >> docs/architecture.md
     
-    # Consolidate agent-related docs
-    cat docs/agent_*.md > docs/pages/agents.py
+    # 3. Consolidate Testing Documentation
+    echo "Consolidating testing documentation..."
+    mkdir -p docs/testing
+    cat docs/pytest_fixer.md docs/pytest_plugin.md docs/test_fixer.md >> docs/testing_architecture.md
+    rm -f docs/pytest_fixer.md docs/pytest_plugin.md docs/test_fixer.md
     
-    # Consolidate error-related docs
-    cat docs/error_*.md > docs/pages/error_management.py
+    # 4. Create Single Error Management Doc
+    echo "Creating unified error management documentation..."
+    cat docs/error.md docs/ErrorList.md > docs/error_management.md
+    rm -f docs/error.md docs/ErrorList.md
     
-    # Consolidate monitoring docs
-    cat docs/*monitor*.md > docs/pages/monitoring.py
+    # 5. Clean Up Empty Files
+    echo "Cleaning up empty and stub files..."
+    for file in docs/__init__.md docs/__main__.md docs/factory.md docs/Agents.md \
+                docs/metrics.md docs/service.md docs/models.md docs/config.md docs/main.md; do
+        if [ -f "$file" ] && [ $(wc -l < "$file") -le 3 ]; then
+            rm -f "$file"
+        fi
+    done
     
-    # Move and rename main pages
-    mv docs/Home.md docs/pages/1_🏠_Home.py
-    mv docs/Projects.md docs/pages/2_📊_Projects.py
-    mv docs/Settings.md docs/pages/3_⚙️_Settings.py
+    # 6. Organize Management Docs
+    echo "Organizing management documentation..."
+    mkdir -p docs/management
+    cat docs/task_management.md docs/memory_manager.md docs/security_manager.md > docs/management/system_management.md
+    rm -f docs/task_management.md docs/memory_manager.md docs/security_manager.md
     
-    # Move implementation docs to proper location
-    mkdir -p docs/implementation
-    mv docs/phase*.md docs/implementation/
-    mv docs/development_plan.md docs/implementation/
+    # 7. Clean up file analysis docs
+    echo "Consolidating file analysis documentation..."
+    cat docs/file_analyzer.md docs/file_consolidator.md > docs/file_management.md
+    rm -f docs/file_analyzer.md docs/file_consolidator.md
     
-    # Create API documentation structure
-    mkdir -p docs/api
-    mv docs/api_*.md docs/api/
-    
-    # Clean up old files
-    rm -f docs/agent_*.md
-    rm -f docs/error_*.md
-    rm -f docs/*monitor*.md
-    
-    echo "Documentation reorganization complete."
+    echo "Documentation consolidation complete."
 }
 
 # Function to setup and update GitHub repository

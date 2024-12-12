@@ -193,6 +193,44 @@ EOL
     fi
 }
 
+# Function to consolidate and reorganize documentation
+consolidate_docs() {
+    echo "Consolidating and reorganizing documentation..."
+    
+    # Create new consolidated files
+    mkdir -p docs/pages
+    
+    # Consolidate agent-related docs
+    cat docs/agent_*.md > docs/pages/agents.py
+    
+    # Consolidate error-related docs
+    cat docs/error_*.md > docs/pages/error_management.py
+    
+    # Consolidate monitoring docs
+    cat docs/*monitor*.md > docs/pages/monitoring.py
+    
+    # Move and rename main pages
+    mv docs/Home.md docs/pages/1_🏠_Home.py
+    mv docs/Projects.md docs/pages/2_📊_Projects.py
+    mv docs/Settings.md docs/pages/3_⚙️_Settings.py
+    
+    # Move implementation docs to proper location
+    mkdir -p docs/implementation
+    mv docs/phase*.md docs/implementation/
+    mv docs/development_plan.md docs/implementation/
+    
+    # Create API documentation structure
+    mkdir -p docs/api
+    mv docs/api_*.md docs/api/
+    
+    # Clean up old files
+    rm -f docs/agent_*.md
+    rm -f docs/error_*.md
+    rm -f docs/*monitor*.md
+    
+    echo "Documentation reorganization complete."
+}
+
 # Main execution
 verify_structure
 fix_organization
@@ -203,5 +241,10 @@ update_docs
 manage_memory
 improve_indexing
 init_git
+
+# Add documentation consolidation to main execution
+if [ "$1" = "--docs" ] || [ "$1" = "-d" ]; then
+    consolidate_docs
+fi
 
 echo "Verify and fix process completed successfully!"

@@ -1,7 +1,7 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
+*.class
 *.so
 .Python
 build/
@@ -22,34 +22,36 @@ wheels/
 
 # Virtual Environment
 venv/
-env/
 ENV/
+env/
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-.DS_Store
-
-# Streamlit
-.streamlit/secrets.toml
+*~
 
 # Testing
+.pytest_cache/
 .coverage
 htmlcov/
-.pytest_cache/
 .tox/
+.nox/
+.coverage.*
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
 
 # Logs
-*.log
 logs/
-log/
+*.log
 
 # Environment variables
 .env
-.env.local
+.env.*
 
-# Distribution
-dist/
-build/
+# System
+.DS_Store
+Thumbs.db

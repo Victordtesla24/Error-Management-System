@@ -15,10 +15,13 @@ An automated system for managing and handling errors efficiently in software pro
 
 1. Clone the repository
 2. Install dependencies:
+
    ```bash
    pip install -r requirements.txt
    ```
+
 3. Run the verification script:
+
    ```bash
    ./scripts/verify_and_fix.sh
    ```
@@ -50,4 +53,3 @@ An automated system for managing and handling errors efficiently in software pro
 MIT License
 
 Last updated: $(date)
-

@@ -1,0 +1,37 @@
+2024-12-12 09:24:04,302 [WARNING] SENTRY_DSN environment variable not set, Sentry integration disabled
+/Users/admin/cursor/error-management-system/venv/lib/python3.11/site-packages/_pytest/config/__init__.py:328: PluggyTeardownRaisedWarning: A plugin raised an exception during an old-style hookwrapper teardown.
+Plugin: helpconfig, Hook: pytest_cmdline_parse
+ConftestImportFailure: ImportError: cannot import name 'Error' from 'src.error_management.models' (/Users/admin/cursor/error-management-system/src/error_management/models.py) (from /Users/admin/cursor/error-management-system/tests/conftest.py)
+For more information see https://pluggy.readthedocs.io/en/stable/api_reference.html#pluggy.PluggyTeardownRaisedWarning
+  config = pluginmanager.hook.pytest_cmdline_parse(
+ImportError while loading conftest '/Users/admin/cursor/error-management-system/tests/conftest.py'.
+tests/conftest.py:10: in <module>
+    from src.error_management.simple_handler import error_handler
+src/error_management/__init__.py:23: in <module>
+    from .error_report import generate_report, get_recent_reports, save_report
+src/error_management/error_report.py:9: in <module>
+    from .models import Error, ErrorContext, ErrorFix, ErrorReport, ErrorStatus
+E   ImportError: cannot import name 'Error' from 'src.error_management.models' (/Users/admin/cursor/error-management-system/src/error_management/models.py)
+2024-12-12 09:24:04 [info     ] Logging initialized
+2024-12-12 09:24:04 [warning  ] SENTRY_DSN environment variable not set, skipping Sentry initialization
+2024-12-12 09:24:04,366 [INFO] src.error_management.error_handler: Monitoring /Users/admin/cursor/error-management-system/src for errors
+2024-12-12 09:24:04,366 [INFO] src.error_management.error_handler: Monitoring /Users/admin/cursor/error-management-system/tests for errors
+2024-12-12 09:24:04,366 [INFO] src.error_management.error_handler: Monitoring /Users/admin/cursor/error-management-system/scripts for errors
+2024-12-12 09:24:04 [info     ] Error handler initialized
+2024-12-12 09:24:04,372 [INFO] agent_manager: Configuration loaded successfully
+2024-12-12 09:24:04,372 [INFO] service_factory: Creating services...
+2024-12-12 09:24:04,372 [INFO] service_factory: Created memory manager
+2024-12-12 09:24:04,372 [INFO] service_factory: Created metrics collector
+2024-12-12 09:24:04 [info     ] Logging initialized
+2024-12-12 09:24:04 [warning  ] SENTRY_DSN environment variable not set, skipping Sentry initialization
+2024-12-12 09:24:04,375 [INFO] src.error_management.error_handler: Monitoring /Users/admin/cursor/error-management-system/src for errors
+2024-12-12 09:24:04,375 [INFO] src.error_management.error_handler: Monitoring /Users/admin/cursor/error-management-system/tests for errors
+2024-12-12 09:24:04,375 [INFO] src.error_management.error_handler: Monitoring /Users/admin/cursor/error-management-system/scripts for errors
+2024-12-12 09:24:04 [info     ] Error handler initialized
+2024-12-12 09:24:04,375 [INFO] service_factory: Created error management service
+2024-12-12 09:24:04,375 [INFO] agent_manager: Services initialized successfully
+2024-12-12 09:24:04,375 [INFO] src.error_management.error_detector: Added path to monitor: /Users/admin/cursor/error-management-system/src
+2024-12-12 09:24:04,375 [INFO] src.error_management.error_detector: Added path to monitor: /Users/admin/cursor/error-management-system/tests
+2024-12-12 09:24:04,375 [INFO] agent_manager: Error handling initialized successfully
+2024-12-12 09:24:04,375 [INFO] memory_manager: Starting memory monitoring
+2024-12-12 09:24:04,376 [INFO] agent_manager: System monitoring started

@@ -1,0 +1,106 @@
+# Error Management System Configuration
+
+# System Settings
+project_root: /Users/admin/cursor/error-management-system
+python_path: /Users/admin/cursor/error-management-system
+
+# Error Management
+error_management:
+  enabled: true
+  auto_fix: true
+  monitoring:
+    enabled: true
+    interval: 5  # seconds
+    paths:
+      - src/
+      - tests/
+      - scripts/
+    log_files:
+      - logs/error_management.log
+      - logs/agent.log
+      - logs/monitor.log
+  error_detection:
+    enabled: true
+    severity_threshold: "LOW"  # LOW, MEDIUM, HIGH, CRITICAL
+    scan_interval: 5  # seconds
+  error_tracking:
+    provider: "sentry"
+    dsn: "${SENTRY_DSN}"  # Set via environment variable
+    environment: "development"
+    traces_sample_rate: 1.0
+    profiles_sample_rate: 1.0
+    send_default_pii: false
+    attach_stacktrace: true
+    debug: true
+  error_fixes:
+    enabled: true
+    max_retries: 3
+    backup_enabled: true
+    strategies:
+      import_error:
+        - check_module_exists
+        - install_missing_package
+        - fix_import_path
+      syntax_error:
+        - fix_syntax
+        - format_code
+      type_error:
+        - fix_type_mismatch
+        - add_type_conversion
+      runtime_error:
+        - analyze_stack_trace
+        - fix_runtime_issue
+      attribute_error:
+        - fix_attribute_access
+        - add_missing_attribute
+  reporting:
+    enabled: true
+    log_level: "INFO"
+    report_directory: "reports/"
+    metrics_enabled: true
+    dashboard_enabled: true
+
+# Logging Configuration
+logging:
+  version: 1
+  disable_existing_loggers: false
+  formatters:
+    standard:
+      format: "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+    json:
+      class: pythonjsonlogger.jsonlogger.JsonFormatter
+      format: "%(asctime)s %(name)s %(levelname)s %(message)s"
+  handlers:
+    console:
+      class: logging.StreamHandler
+      level: INFO
+      formatter: standard
+      stream: ext://sys.stdout
+    file:
+      class: logging.FileHandler
+      level: INFO
+      formatter: json
+      filename: logs/error_management.log
+  loggers:
+    error_management:
+      level: INFO
+      handlers: [console, file]
+      propagate: false
+    agent:
+      level: INFO
+      handlers: [console, file]
+      propagate: false
+  root:
+    level: INFO
+    handlers: [console, file]
+
+# Memory Management
+memory:
+  monitoring:
+    enabled: true
+    interval: 10  # seconds
+    threshold: 80  # percent
+  cleanup:
+    enabled: true
+    threshold: 90  # percent
+    aggressive: false

@@ -1,0 +1,50 @@
+{
+  "name": "error-management-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@emotion/react": "11.10.5",
+    "@emotion/styled": "11.10.5",
+    "@mui/icons-material": "5.11.0",
+    "@mui/lab": "^6.0.0-beta.18",
+    "@mui/material": "5.11.0",
+    "@mui/system": "5.11.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "recharts": "2.12.0",
+    "typescript": "4.9.5"
+  },
+  "devDependencies": {
+    "@types/node": "20.4.5",
+    "@types/react": "18.2.0",
+    "@types/react-dom": "18.2.0",
+    "@types/recharts": "2.0.0",
+    "@typescript-eslint/eslint-plugin": "5.62.0",
+    "@typescript-eslint/parser": "5.62.0",
+    "eslint": "8.46.0",
+    "eslint-plugin-react": "7.33.1",
+    "eslint-plugin-react-hooks": "4.6.0",
+    "react-scripts": "5.0.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "lint": "eslint src --ext .ts,.tsx",
+    "type-check": "tsc --noEmit"
+  },
+  "proxy": "http://localhost:8080",
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

@@ -231,6 +231,48 @@ consolidate_docs() {
     echo "Documentation reorganization complete."
 }
 
+# Function to setup and update GitHub repository
+setup_github() {
+    echo "Setting up GitHub repository..."
+    
+    # Initialize git if not already initialized
+    if [ ! -d ".git" ]; then
+        git init
+        git branch -M main
+    fi
+    
+    # Update remote origin
+    git remote remove origin || true
+    git remote add origin https://github.com/Victordtesla24/Error-Management-System.git
+    
+    # Update README if it doesn't exist
+    if [ ! -f "README.md" ]; then
+        echo "# Error Management System" > README.md
+        echo "\nA comprehensive error management system built with Streamlit." >> README.md
+        echo "\n## Features" >> README.md
+        echo "- Automated error detection and fixing" >> README.md
+        echo "- Real-time monitoring dashboard" >> README.md
+        echo "- Intelligent error analysis" >> README.md
+        echo "\n## Installation" >> README.md
+        echo "\`\`\`bash" >> README.md
+        echo "pip install -r requirements.txt" >> README.md
+        echo "\`\`\`" >> README.md
+    fi
+    
+    # Stage all changes
+    git add .
+    
+    # Generate commit message based on changes
+    CHANGES=$(git status --porcelain)
+    if [ ! -z "$CHANGES" ]; then
+        COMMIT_MSG="Update: $(date)\n\nChanges:\n$CHANGES"
+        git commit -m "$COMMIT_MSG"
+        git push -u origin main || echo "Push failed - please push manually with credentials"
+    else
+        echo "No changes to commit"
+    fi
+}
+
 # Main execution
 verify_structure
 fix_organization
@@ -246,5 +288,8 @@ init_git
 if [ "$1" = "--docs" ] || [ "$1" = "-d" ]; then
     consolidate_docs
 fi
+
+# Add GitHub setup to main execution
+setup_github
 
 echo "Verify and fix process completed successfully!"
